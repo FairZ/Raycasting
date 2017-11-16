@@ -26,7 +26,7 @@ void Mesh::LoadOBJ(std::string filename, float scale)
 				currentLineStream >> junk >> x >> y >> z;
 				rawPositionData.push_back(aml::Vector((x*scale)+128, y*scale+128, (z*scale)+128));
 			}
-			//OBJLoader does precalculation of all data needed from faces, will speed up program if run in real time
+			//OBJLoader does precalculation of all data needed from faces, this will speed up program if run in real time
 			else if (!currentLine.substr(0, 2).compare(0, 1, "f"))
 			{
 				std::string junk;

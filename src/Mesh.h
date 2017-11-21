@@ -37,11 +37,27 @@ struct Face
 	}
 };
 
+struct MollerTrumboreFace
+{
+	aml::Vector vert0;
+	aml::Vector edge1;
+	aml::Vector edge2;
+
+	MollerTrumboreFace(aml::Vector _vert0, aml::Vector _edge1, aml::Vector _edge2)
+	{
+		vert0 = _vert0;
+		edge1 = _edge1;
+		edge2 = _edge2;
+	}
+};
+
 class Mesh
 {
 public:
-	void LoadOBJ(std::string filename, float scale);
+	void LoadBruteForceOBJ(std::string filename, float scale, int xOffset, int yOffset, int zOffset);
+	void LoadMollerTrumboreOBJ(std::string filename, float scale, int xOffset, int yOffset, int zOffset);
 	std::vector<Face> faces;
+	std::vector<MollerTrumboreFace> MTFaces;
 };
 
 

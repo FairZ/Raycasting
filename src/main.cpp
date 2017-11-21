@@ -2,7 +2,8 @@
 #include "Ray.h"
 #include "lodepng.h"
 #include <chrono>
-#include <iostream>
+#include <fstream>
+#include <string>
 
 int main(int argc, char* argv[])
 {
@@ -12,28 +13,54 @@ int main(int argc, char* argv[])
 	std::fill(img.begin(), img.end(), 255);
 
 	//create timer for recording durations
-	std::chrono::high_resolution_clock timer;
+	std::chrono::steady_clock timer;
+	auto loadstart = timer.now();
+	auto loadend = timer.now();
+	auto end = timer.now();
+	
+	//parameters for use later in program
+	int noOfIterations = 1;
+	std::string fileName = "teapot.obj";
+	float scale = 75.0f;
+	int xOffset = 128;
+	int yOffset = 10;
+	int zOffset = 128;
+
+	//read in data from a config file to give parameters different values
+	std::fstream config;
+
+	config.open("Config.txt", std::ios_base::in);
+
+	if(config.is_open())
+	{
+		config >> noOfIterations;
+		config >> fileName;
+		config >> scale;
+		config >> xOffset;
+		config >> yOffset;
+		config >> zOffset;
+	}
+
+	config.close();
+
+	//open an output file to send analytic data to
+	std::fstream outputFile;
+
+	outputFile.open("BruteForce.csv", std::ios_base::out | std::ios_base::trunc);
+
+	outputFile << "Iteration," << "Load Time(ms)," << "Raycast Time(ms)," << "Total Time(ms)," << std::endl;
 
 	//repeat the raycast for a number of iterations
-	for (int iterations = 0; iterations < 1; iterations++)
+	for (int iterations = 0; iterations < noOfIterations; iterations++)
 	{
 		//initialise variables for use in raycasting
 		Mesh mesh;
 		std::vector<Ray> rays;
 
 		//record the time before the precalculation / loading phase 
-		auto loadstart = timer.now();
+		loadstart = timer.now();
 
-		//pass in the fileName and scale of whatever triangulated OBJ you like as the command line arguments
-		if (argc == 3)
-		{
-			mesh.LoadOBJ(argv[1], atof(argv[2]));
-		}
-		else
-		{
-			//if no parameters are passed in load a default model and scale
-			mesh.LoadOBJ("gourd.obj", 75.0f);
-		}
+		mesh.LoadBruteForceOBJ(fileName, scale, xOffset, yOffset, zOffset);
 
 		//generate all rays
 		aml::Vector direction(1, 0, 0);
@@ -47,12 +74,12 @@ int main(int argc, char* argv[])
 		aml::Vector hitPoint;
 
 		//record time once loading/precalculation has ended and raycasting begins
-		auto loadend = timer.now();
+		loadend = timer.now();
 
-		//for every face, go through every ray check if it hits the plane
-		for (auto j : mesh.faces)
+		//for every ray, go through every face and check if they collide
+		for (auto i : rays)
 		{
-			for (auto i : rays)
+			for (auto j : mesh.faces)
 			{
 				if (i.calcHitPoint(j, hitPoint))
 				{
@@ -70,14 +97,75 @@ int main(int argc, char* argv[])
 		}
 
 		//record the time once the rays have been cast
-		auto end = timer.now();
+		end = timer.now();
 
 		//output the individual and total durations
-		std::cout << "Load time: " << std::chrono::duration_cast<std::chrono::milliseconds>(loadend - loadstart).count() << "ms" << std::endl;
-		std::cout << "Raycast time: " << std::chrono::duration_cast<std::chrono::milliseconds>(end - loadend).count() << "ms" << std::endl;
-		std::cout << "Total time: " << std::chrono::duration_cast<std::chrono::milliseconds>(end - loadstart).count() << "ms" << std::endl;
+		outputFile << iterations  << "," 
+			<< std::chrono::duration_cast<std::chrono::milliseconds>(loadend - loadstart).count() << ","
+			<< std::chrono::duration_cast<std::chrono::milliseconds>(end - loadend).count() << ","
+			<< std::chrono::duration_cast<std::chrono::milliseconds>(end - loadstart).count() << "," << std::endl;
 
 	}
+
+	outputFile.close();
+
+	outputFile.open("MollerTrumbore.csv", std::ios_base::out | std::ios_base::trunc);
+
+	outputFile << "Iteration," << "Load Time(ms)," << "Raycast Time(ms)," << "Total Time(ms)," << std::endl;
+
+	//repeat the raycast for a number of iterations
+	for (int iterations = 0; iterations < noOfIterations; iterations++)
+	{
+		//initialise variables for use in raycasting
+		Mesh mesh;
+		std::vector<Ray> rays;
+
+		//record the time before the precalculation / loading phase 
+		loadstart = timer.now();
+
+		mesh.LoadMollerTrumboreOBJ(fileName, scale, xOffset, yOffset, zOffset);
+
+		//generate all rays
+		aml::Vector direction(1, 0, 0);
+		for (int m = 0; m < 256; m++)
+		{
+			for (int n = 0; n < 256; n++)
+			{
+				rays.push_back(Ray(aml::Vector(0, m, n), direction));
+			}
+		}
+
+		float t;
+
+		//record time once loading/precalculation has ended and raycasting begins
+		loadend = timer.now();
+
+		//for every ray, go through every face and check if they collide
+		for (auto i : rays)
+		{
+			for (auto j : mesh.MTFaces)
+			{
+				if (i.MollerTrumboreIntersection(j, t))
+				{
+					img[4 * 256 * (255 - i.origin.y) + 4 * (i.origin.z) + 0] = t;
+					img[4 * 256 * (255 - i.origin.y) + 4 * (i.origin.z) + 1] = i.origin.y;
+					img[4 * 256 * (255 - i.origin.y) + 4 * (i.origin.z) + 2] = i.origin.z;
+				}
+			}
+		}
+
+		//record the time once the rays have been cast
+		end = timer.now();
+
+		//output the individual and total durations
+		outputFile << iterations  << "," 
+			<< std::chrono::duration_cast<std::chrono::milliseconds>(loadend - loadstart).count() << ","
+			<< std::chrono::duration_cast<std::chrono::milliseconds>(end - loadend).count() << ","
+			<< std::chrono::duration_cast<std::chrono::milliseconds>(end - loadstart).count() << "," << std::endl;
+
+	}
+
+	outputFile.close();
 
 	lodepng::encode("drawing.png", img, 256, 256);
 

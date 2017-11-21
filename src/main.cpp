@@ -55,7 +55,6 @@ int main(int argc, char* argv[])
 	{
 		//initialise variables for use in raycasting
 		Mesh mesh;
-		std::vector<Ray> rays;
 
 		//record the time before the precalculation / loading phase 
 		loadstart = timer.now();
@@ -64,33 +63,32 @@ int main(int argc, char* argv[])
 
 		//generate all rays
 		aml::Vector direction(1, 0, 0);
-		for (int m = 0; m < 256; m++)
-		{
-			for (int n = 0; n < 256; n++)
-			{
-				rays.push_back(Ray(aml::Vector(0, m, n), direction));
-			}
-		}
+		Ray ray(aml::Vector(),direction);
 		aml::Vector hitPoint;
 
 		//record time once loading/precalculation has ended and raycasting begins
 		loadend = timer.now();
 
-		//for every ray, go through every face and check if they collide
-		for (auto i : rays)
+		//for every face, go through every ray and check if they collide
+		for (auto j : mesh.faces)
 		{
-			for (auto j : mesh.faces)
+			for (int m = 0; m < 256; m++)
 			{
-				if (i.calcHitPoint(j, hitPoint))
+				ray.origin.y = m;
+				for (int n = 0; n < 256; n++)
 				{
-					//if the plane is hit calculate whether the hit point is within the triangle
-					if (j.WithinTriangle(hitPoint))
+					ray.origin.z = n;
+					if (ray.calcHitPoint(j, hitPoint))
 					{
-						//if it is draw a colour in the position of the ray
-						img[4 * 256 * (255 - i.origin.y) + 4 * (i.origin.z) + 0] = fabs(j.normal.x) * 255;
-						img[4 * 256 * (255 - i.origin.y) + 4 * (i.origin.z) + 1] = fabs(j.normal.y) * 255;
-						img[4 * 256 * (255 - i.origin.y) + 4 * (i.origin.z) + 2] = fabs(j.normal.z) * 255;
+						//if the plane is hit calculate whether the hit point is within the triangle
+						if (j.WithinTriangle(hitPoint))
+						{
+							//if it is draw a colour in the position of the ray
+							img[4 * 256 * (255 - ray.origin.y) + 4 * (ray.origin.z) + 0] = fabs(j.normal.x) * 255;
+							img[4 * 256 * (255 - ray.origin.y) + 4 * (ray.origin.z) + 1] = fabs(j.normal.y) * 255;
+							img[4 * 256 * (255 - ray.origin.y) + 4 * (ray.origin.z) + 2] = fabs(j.normal.z) * 255;
 
+						}
 					}
 				}
 			}
@@ -118,7 +116,6 @@ int main(int argc, char* argv[])
 	{
 		//initialise variables for use in raycasting
 		Mesh mesh;
-		std::vector<Ray> rays;
 
 		//record the time before the precalculation / loading phase 
 		loadstart = timer.now();
@@ -127,29 +124,28 @@ int main(int argc, char* argv[])
 
 		//generate all rays
 		aml::Vector direction(1, 0, 0);
-		for (int m = 0; m < 256; m++)
-		{
-			for (int n = 0; n < 256; n++)
-			{
-				rays.push_back(Ray(aml::Vector(0, m, n), direction));
-			}
-		}
+		Ray ray(aml::Vector(), direction);
 
 		float t;
 
 		//record time once loading/precalculation has ended and raycasting begins
 		loadend = timer.now();
 
-		//for every ray, go through every face and check if they collide
-		for (auto i : rays)
+		//for every face, go through every ray and check if they collide
+		for (auto j : mesh.MTFaces)
 		{
-			for (auto j : mesh.MTFaces)
+			for (int m = 0; m < 256; m++)
 			{
-				if (i.MollerTrumboreIntersection(j, t))
+				ray.origin.y = m;
+				for (int n = 0; n < 256; n++)
 				{
-					img[4 * 256 * (255 - i.origin.y) + 4 * (i.origin.z) + 0] = t;
-					img[4 * 256 * (255 - i.origin.y) + 4 * (i.origin.z) + 1] = i.origin.y;
-					img[4 * 256 * (255 - i.origin.y) + 4 * (i.origin.z) + 2] = i.origin.z;
+					ray.origin.z = n;
+					if (ray.MollerTrumboreIntersection(j, t))
+					{
+						img[4 * 256 * (255 - ray.origin.y) + 4 * (ray.origin.z) + 0] = t;
+						img[4 * 256 * (255 - ray.origin.y) + 4 * (ray.origin.z) + 1] = ray.origin.y;
+						img[4 * 256 * (255 - ray.origin.y) + 4 * (ray.origin.z) + 2] = ray.origin.z;
+					}
 				}
 			}
 		}

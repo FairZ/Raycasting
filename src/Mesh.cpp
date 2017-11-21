@@ -1,110 +1,95 @@
 #include "Mesh.h"
-#include <fstream>
-#include <iostream>
-#include <sstream>
 
-//Heavily edited from code originally by Leigh Mcloughlin. Original file can be found in Documentation folder of the hand in titled "OBJLOADER.cpp".
 void Mesh::LoadBruteForceOBJ(std::string filename, float scale, int xOffset, int yOffset, int zOffset)
 {
-	// Find file
-	std::ifstream inputFile(filename);
+	std::string err;
+	tinyobj::LoadObj(&m_attrib, &m_shapes, &m_materials, &err, filename.c_str(), NULL, true);
 
-	if (inputFile.is_open())
-	{
-		std::vector<aml::Vector> rawPositionData;
+	for (size_t i = 0; i < m_shapes.size(); i++) {
+		size_t index_offset = 0;
 
-		std::string currentLine;
+		// For each face
+		for (size_t f = 0; f < m_shapes[i].mesh.num_face_vertices.size(); f++) {
+			size_t fnum = m_shapes[i].mesh.num_face_vertices[f];
 
-		while (std::getline(inputFile, currentLine))
-		{
-			std::stringstream currentLineStream(currentLine);
+			aml::Vector normal;
+			float k;
+			aml::Vector A;
+			aml::Vector B;
+			aml::Vector C;
 
-			if (!currentLine.substr(0, 2).compare(0, 1, "v"))
-			{
-				std::string junk;
-				float x, y, z;
-				currentLineStream >> junk >> x >> y >> z;
-				rawPositionData.push_back(aml::Vector((x*scale)+xOffset, (y*scale)+yOffset, (z*scale)+zOffset));
-			}
-			//OBJLoader does precalculation of all data needed from faces, this will speed up program if run in real time
-			else if (!currentLine.substr(0, 2).compare(0, 1, "f"))
-			{
-				std::string junk;
-				int verts[3];
-				aml::Vector normal;
-				float k;
-				aml::Vector A;
-				aml::Vector B;
-				aml::Vector C;
+			tinyobj::index_t idxA = m_shapes[i].mesh.indices[index_offset + 0];
+			A.x = (m_attrib.vertices.at(3 * idxA.vertex_index + 0)*scale) + xOffset;
+			A.y = (m_attrib.vertices.at(3 * idxA.vertex_index + 1)*scale) + yOffset;
+			A.z = (m_attrib.vertices.at(3 * idxA.vertex_index + 2)*scale) + zOffset;
 
-				currentLineStream >> junk >> verts[0] >> verts[1] >> verts[2];
+			tinyobj::index_t idxB = m_shapes[i].mesh.indices[index_offset + 1];
+			B.x = (m_attrib.vertices.at(3 * idxB.vertex_index + 0)*scale) + xOffset;
+			B.y = (m_attrib.vertices.at(3 * idxB.vertex_index + 1)*scale) + yOffset;
+			B.z = (m_attrib.vertices.at(3 * idxB.vertex_index + 2)*scale) + zOffset;
 
-				A = rawPositionData[verts[0] - 1];
-				B = rawPositionData[verts[1] - 1];
-				C = rawPositionData[verts[2] - 1];
+			tinyobj::index_t idxC = m_shapes[i].mesh.indices[index_offset + 2];
+			C.x = (m_attrib.vertices.at(3 * idxC.vertex_index + 0)*scale) + xOffset;
+			C.y = (m_attrib.vertices.at(3 * idxC.vertex_index + 1)*scale) + yOffset;
+			C.z = (m_attrib.vertices.at(3 * idxC.vertex_index + 2)*scale) + zOffset;
 
-				//normalise( (B-A) x (C-A) )
-				normal = aml::Normalise(aml::CrossProduct((B - A), (C - A)));
+			normal = aml::Normalise(aml::CrossProduct((B - A), (C - A)));
 
-				k = aml::DotProduct(normal, A);
+			k = aml::DotProduct(normal, A);
 
-				Face face(A, B, C, normal, k);
+			Face face(A, B, C, normal, k);
 
-				faces.push_back(face);
-			}
+			faces.push_back(face);
+
+			index_offset += fnum;
+
 		}
 	}
+	
 }
-//end of function
 
-//Heavily edited from code originally by Leigh Mcloughlin. Original file can be found in Documentation folder of the hand in titled "OBJLOADER.cpp".
 void Mesh::LoadMollerTrumboreOBJ(std::string filename, float scale, int xOffset, int yOffset, int zOffset)
 {
-	// Find file
-	std::ifstream inputFile(filename);
+	std::string err;
+	tinyobj::LoadObj(&m_attrib, &m_shapes, &m_materials, &err, filename.c_str(), NULL, true);
 
-	if (inputFile.is_open())
-	{
-		std::vector<aml::Vector> rawPositionData;
+	for (size_t i = 0; i < m_shapes.size(); i++) {
+		size_t index_offset = 0;
 
-		std::string currentLine;
+		// For each face
+		for (size_t f = 0; f < m_shapes[i].mesh.num_face_vertices.size(); f++) {
+			size_t fnum = m_shapes[i].mesh.num_face_vertices[f];
 
-		while (std::getline(inputFile, currentLine))
-		{
-			std::stringstream currentLineStream(currentLine);
+			aml::Vector vert0;
+			aml::Vector vert1;
+			aml::Vector vert2;
+			aml::Vector edge1;
+			aml::Vector edge2;
 
-			if (!currentLine.substr(0, 2).compare(0, 1, "v"))
-			{
-				std::string junk;
-				float x, y, z;
-				currentLineStream >> junk >> x >> y >> z;
-				rawPositionData.push_back(aml::Vector((x*scale)+xOffset, (y*scale)+yOffset, (z*scale)+zOffset));
-			}
-			//OBJLoader does precalculation of all data needed from faces, this will speed up program if run in real time
-			else if (!currentLine.substr(0, 2).compare(0, 1, "f"))
-			{
-				std::string junk;
-				int verts[3];
-				aml::Vector vert0;
-				aml::Vector vert1;
-				aml::Vector vert2;
-				aml::Vector edge1;
-				aml::Vector edge2;
+			tinyobj::index_t idxA = m_shapes[i].mesh.indices[index_offset + 0];
+			vert0.x = (m_attrib.vertices.at(3 * idxA.vertex_index + 0)*scale) + xOffset;
+			vert0.y = (m_attrib.vertices.at(3 * idxA.vertex_index + 1)*scale) + yOffset;
+			vert0.z = (m_attrib.vertices.at(3 * idxA.vertex_index + 2)*scale) + zOffset;
 
-				currentLineStream >> junk >> verts[0] >> verts[1] >> verts[2];
+			tinyobj::index_t idxB = m_shapes[i].mesh.indices[index_offset + 1];
+			vert1.x = (m_attrib.vertices.at(3 * idxB.vertex_index + 0)*scale) + xOffset;
+			vert1.y = (m_attrib.vertices.at(3 * idxB.vertex_index + 1)*scale) + yOffset;
+			vert1.z = (m_attrib.vertices.at(3 * idxB.vertex_index + 2)*scale) + zOffset;
 
-				vert0 = rawPositionData[verts[0] - 1];
-				vert1 = rawPositionData[verts[1] - 1];
-				vert2 = rawPositionData[verts[2] - 1];
+			tinyobj::index_t idxC = m_shapes[i].mesh.indices[index_offset + 2];
+			vert2.x = (m_attrib.vertices.at(3 * idxC.vertex_index + 0)*scale) + xOffset;
+			vert2.y = (m_attrib.vertices.at(3 * idxC.vertex_index + 1)*scale) + yOffset;
+			vert2.z = (m_attrib.vertices.at(3 * idxC.vertex_index + 2)*scale) + zOffset;
 
-				edge1 = vert1 - vert0;
-				edge2 = vert2 - vert0;
+			edge1 = vert1 - vert0;
+			edge2 = vert2 - vert0;
 
-				MollerTrumboreFace face(vert0,edge1,edge2);
+			MollerTrumboreFace face(vert0, edge1, edge2);
 
-				MTFaces.push_back(face);
-			}
+			MTFaces.push_back(face);
+
+			index_offset += fnum;
+
 		}
 	}
 }
-//end of function

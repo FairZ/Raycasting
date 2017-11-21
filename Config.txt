@@ -1,5 +1,6 @@
-2
-"teapot.obj"
+1
+typhoon.obj
+45
 128
-10
+128
 128

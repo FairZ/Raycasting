@@ -17,5 +17,5 @@ add_executable(Raycasting
   src/Mesh.cpp
   src/Ray.cpp
   src/lodepng.cpp
-
+  src/tinyobjloader/tiny_obj_loader.cc
 )

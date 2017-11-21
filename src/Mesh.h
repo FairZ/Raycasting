@@ -1,6 +1,7 @@
 #ifndef _MESH_H_
 #define _MESH_H_
 #include "Maths.h"
+#include "tinyobjloader/tiny_obj_loader.h"
 #include <vector>
 
 struct Face
@@ -20,20 +21,19 @@ struct Face
 
 	bool WithinTriangle(aml::Vector hitPoint)
 	{
-		bool RetVal = true;
-		if (aml::DotProduct(aml::CrossProduct(verts[1] - verts[0], hitPoint - verts[0]), normal) <= 0)
+		if (aml::DotProduct(aml::CrossProduct(verts[1] - verts[0], hitPoint - verts[0]), normal) < 0.0f)
 		{
-			RetVal = false;
+			return false;
 		}
-		else if (aml::DotProduct(aml::CrossProduct(verts[2] - verts[1], hitPoint - verts[1]), normal) <= 0)
+		else if (aml::DotProduct(aml::CrossProduct(verts[2] - verts[1], hitPoint - verts[1]), normal) < 0.0f)
 		{
-			RetVal = false;
+			return false;
 		}
-		else if (aml::DotProduct(aml::CrossProduct(verts[0] - verts[2], hitPoint - verts[2]), normal) <= 0)
+		else if (aml::DotProduct(aml::CrossProduct(verts[0] - verts[2], hitPoint - verts[2]), normal) < 0.0f)
 		{
-			RetVal = false;
+			return false;
 		}
-		return RetVal;
+		return true;
 	}
 };
 
@@ -53,6 +53,10 @@ struct MollerTrumboreFace
 
 class Mesh
 {
+private:
+	tinyobj::attrib_t m_attrib;
+	std::vector<tinyobj::shape_t> m_shapes;
+	std::vector<tinyobj::material_t> m_materials;
 public:
 	void LoadBruteForceOBJ(std::string filename, float scale, int xOffset, int yOffset, int zOffset);
 	void LoadMollerTrumboreOBJ(std::string filename, float scale, int xOffset, int yOffset, int zOffset);

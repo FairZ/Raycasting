@@ -48,7 +48,7 @@ int main(int argc, char* argv[])
 
 	outputFile.open("BruteForce.csv", std::ios_base::out | std::ios_base::trunc);
 
-	outputFile << "Iteration," << "Load Time(ms)," << "Raycast Time(ms)," << "Total Time(ms)," << std::endl;
+	outputFile << "Iteration," << "Load Time(ms)," << "Raycast Time(ms)," << "Total Time(ms)," << "memory," << std::endl;
 
 	//repeat the raycast for a number of iterations
 	for (int iterations = 0; iterations < noOfIterations; iterations++)
@@ -98,10 +98,11 @@ int main(int argc, char* argv[])
 		end = timer.now();
 
 		//output the individual and total durations
-		outputFile << iterations  << "," 
+		outputFile << iterations << ","
 			<< std::chrono::duration_cast<std::chrono::milliseconds>(loadend - loadstart).count() << ","
 			<< std::chrono::duration_cast<std::chrono::milliseconds>(end - loadend).count() << ","
-			<< std::chrono::duration_cast<std::chrono::milliseconds>(end - loadstart).count() << "," << std::endl;
+			<< std::chrono::duration_cast<std::chrono::milliseconds>(end - loadstart).count() << ","
+			<< sizeof(Face)*mesh.faces.size() << "," << std::endl;
 
 	}
 
@@ -109,7 +110,7 @@ int main(int argc, char* argv[])
 
 	outputFile.open("MollerTrumbore.csv", std::ios_base::out | std::ios_base::trunc);
 
-	outputFile << "Iteration," << "Load Time(ms)," << "Raycast Time(ms)," << "Total Time(ms)," << std::endl;
+	outputFile << "Iteration," << "Load Time(ms)," << "Raycast Time(ms)," << "Total Time(ms)," << "memory," << std::endl;
 
 	//repeat the raycast for a number of iterations
 	for (int iterations = 0; iterations < noOfIterations; iterations++)
@@ -157,7 +158,8 @@ int main(int argc, char* argv[])
 		outputFile << iterations  << "," 
 			<< std::chrono::duration_cast<std::chrono::milliseconds>(loadend - loadstart).count() << ","
 			<< std::chrono::duration_cast<std::chrono::milliseconds>(end - loadend).count() << ","
-			<< std::chrono::duration_cast<std::chrono::milliseconds>(end - loadstart).count() << "," << std::endl;
+			<< std::chrono::duration_cast<std::chrono::milliseconds>(end - loadstart).count() << "," 
+			<< sizeof(MollerTrumboreFace)*mesh.MTFaces.size() << "," << std::endl;
 
 	}
 

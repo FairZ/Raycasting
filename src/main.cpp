@@ -4,6 +4,7 @@
 #include <chrono>
 #include <fstream>
 #include <string>
+#include <iostream>
 
 int main(int argc, char* argv[])
 {
@@ -50,9 +51,12 @@ int main(int argc, char* argv[])
 
 	outputFile << "Iteration," << "Load Time(ms)," << "Raycast Time(ms)," << "Total Time(ms)," << "memory," << std::endl;
 
+	std::cout << "BruteForce" << std::endl;
+
 	//repeat the raycast for a number of iterations
 	for (int iterations = 0; iterations < noOfIterations; iterations++)
 	{
+		std::cout << iterations << std::endl;
 		//initialise variables for use in raycasting
 		Mesh mesh;
 
@@ -112,9 +116,12 @@ int main(int argc, char* argv[])
 
 	outputFile << "Iteration," << "Load Time(ms)," << "Raycast Time(ms)," << "Total Time(ms)," << "memory," << std::endl;
 
+	std::cout << "MT" << std::endl;
+
 	//repeat the raycast for a number of iterations
 	for (int iterations = 0; iterations < noOfIterations; iterations++)
 	{
+		std::cout << iterations << std::endl;
 		//initialise variables for use in raycasting
 		Mesh mesh;
 
